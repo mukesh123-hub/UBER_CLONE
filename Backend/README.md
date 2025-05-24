@@ -226,52 +226,37 @@ Logs out the authenticated user by invalidating the JWT token and clearing the a
 
 ---
 
-## Captain Registration Endpoint Documentation
+## Captain Registration & Authentication Endpoint Documentation
 
 ## POST `/captains/register`
 
 ### Description
-This endpoint allows a new captain (driver) to register by providing their personal details and vehicle information. On successful registration, it returns a JWT token and the created captain object.
+Register a new captain (driver) by providing personal and vehicle details. Returns a JWT token and the created captain object.
 
 ---
 
 ### Request Body
 
-Send a JSON object with the following structure:
-
 ```json
 {
   "fullname": {
-    "firstname": "Jane",
-    "lastname": "Smith"
+    "firstname": "Jane",        // required, string, min 3 chars
+    "lastname": "Smith"         // optional, string, min 3 chars if provided
   },
-  "email": "jane.smith@example.com",
-  "password": "yourpassword",
+  "email": "jane.smith@example.com", // required, valid email
+  "password": "yourpassword",        // required, string, min 6 chars
   "vehicle": {
-    "color": "Red",
-    "plate": "ABC123",
-    "capacity": 4,
-    "vehicleType": "car"
+    "color": "Red",                  // required, string, min 3 chars
+    "plate": "ABC123",               // required, string, min 3 chars
+    "capacity": 4,                   // required, integer, min 1
+    "vehicleType": "car"             // required, one of: "car", "bike", "truck"
   }
 }
 ```
 
-#### Field Requirements
-
-- `fullname.firstname` (string, required): Minimum 3 characters.
-- `fullname.lastname` (string, optional): Minimum 3 characters if provided.
-- `email` (string, required): Must be a valid email address.
-- `password` (string, required): Minimum 6 characters.
-- `vehicle.color` (string, required): Minimum 3 characters.
-- `vehicle.plate` (string, required): Minimum 3 characters.
-- `vehicle.capacity` (integer, required): Must be a number greater than 0.
-- `vehicle.vehicleType` (string, required): Must be one of `"car"`, `"bike"`, or `"truck"`.
-
 ---
 
-### Responses
-
-#### Success
+### Success Response
 
 - **Status Code:** `201 Created`
 - **Body:**
@@ -296,7 +281,9 @@ Send a JSON object with the following structure:
   }
   ```
 
-#### Validation Error
+---
+
+### Validation Error
 
 - **Status Code:** `400 Bad Request`
 - **Body:**
@@ -315,27 +302,126 @@ Send a JSON object with the following structure:
 
 ---
 
-### Example Request
+## POST `/captains/login`
 
-```bash
-curl -X POST http://localhost:3000/captains/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullname": { "firstname": "Jane", "lastname": "Smith" },
-    "email": "jane.smith@example.com",
-    "password": "yourpassword",
-    "vehicle": {
-      "color": "Red",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }'
+### Description
+Login as a captain using email and password. Returns a JWT token and the captain object.
+
+---
+
+### Request Body
+
+```json
+{
+  "email": "jane.smith@example.com", // required, valid email
+  "password": "yourpassword"         // required, string, min 6 chars
+}
 ```
+
+---
+
+### Success Response
+
+- **Status Code:** `200 OK`
+- **Body:**
+  ```json
+  {
+    "token": "<jwt_token>",
+    "captain": {
+      "_id": "...",
+      "fullname": {
+        "firstname": "Jane",
+        "lastname": "Smith"
+      },
+      "email": "jane.smith@example.com",
+      "vehicle": {
+        "color": "Red",
+        "plate": "ABC123",
+        "capacity": 4,
+        "vehicleType": "car"
+      }
+      // ...other captain fields
+    }
+  }
+  ```
+
+---
+
+### Validation or Authentication Error
+
+- **Status Code:** `400 Bad Request` or `401 Unauthorized`
+- **Body:**
+  ```json
+  {
+    "errors": [
+      {
+        "msg": "Invalid Email",
+        "param": "email",
+        "location": "body"
+      }
+      // ...other errors
+    ]
+    // or
+    // { "message": "Invalid email or password" }
+  }
+  ```
+
+---
+
+## GET `/captains/profile`
+
+### Description
+Returns the authenticated captain's profile information. Requires a valid JWT token.
+
+---
+
+### Success Response
+
+- **Status Code:** `200 OK`
+- **Body:**
+  ```json
+  {
+    "captain": {
+      "_id": "...",
+      "fullname": {
+        "firstname": "Jane",
+        "lastname": "Smith"
+      },
+      "email": "jane.smith@example.com",
+      "vehicle": {
+        "color": "Red",
+        "plate": "ABC123",
+        "capacity": 4,
+        "vehicleType": "car"
+      }
+      // ...other captain fields
+    }
+  }
+  ```
+
+---
+
+## GET `/captains/logout`
+
+### Description
+Logs out the authenticated captain by invalidating the JWT token and clearing the authentication cookie.
+
+---
+
+### Success Response
+
+- **Status Code:** `200 OK`
+- **Body:**
+  ```json
+  {
+    "message": "Logout successfully"
+  }
+  ```
 
 ---
 
 ### Notes
 
 - All fields are required except `fullname.lastname`.
+- All endpoints except `/captains/register` and `/captains/login` require authentication.
 - On success, a JWT token is returned for authentication in future requests.
