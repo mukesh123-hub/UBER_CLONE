@@ -425,3 +425,65 @@ Logs out the authenticated captain by invalidating the JWT token and clearing th
 - All fields are required except `fullname.lastname`.
 - All endpoints except `/captains/register` and `/captains/login` require authentication.
 - On success, a JWT token is returned for authentication in future requests.
+
+---
+
+## GET `/rides/get-fare`
+
+### Description
+Calculates and returns estimated fares for different vehicle types (auto, car, moto) between the given pickup and destination addresses.
+
+---
+
+### Request
+
+- **Query Parameters:**
+  - `pickup` (string, required): The pickup address.
+  - `destination` (string, required): The destination address.
+
+- **Headers:**
+  - `Authorization: Bearer <jwt_token>` (required)
+
+---
+
+### Responses
+
+#### Success
+
+- **Status Code:** `200 OK`
+- **Body:**
+  ```json
+  {
+    "auto": 45,
+    "car": 70,
+    "moto": 32
+  }
+  ```
+  - Each key represents a vehicle type and the value is the estimated fare.
+
+#### Validation Error
+
+- **Status Code:** `400 Bad Request`
+- **Body:**
+  ```json
+  {
+    "errors": [
+      {
+        "msg": "Invalid pickup address",
+        "param": "pickup",
+        "location": "query"
+      }
+      // ...other errors
+    ]
+  }
+  ```
+
+#### Server Error
+
+- **Status Code:** `500 Internal Server Error`
+- **Body:**
+  ```json
+  {
+    "message": "Error message"
+  }
+  ```
